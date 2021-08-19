@@ -23,10 +23,10 @@ After the workshop, you should have some idea:
 1. [Install Rust](https://www.rust-lang.org/tools/install)
 2. Install `docker` + `docker-compose`
 3. Clone the workshop: `git clone https://github.com/audunhalland/async-workshop`
-1. Use a suitable IDE
+4. Use a suitable IDE
    * `vscode` + [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer)
    * or alternatively, `CLion`/`IntelliJ Rust`
-
+5. Install `sqlx` CLI: `cargo install sqlx-cli`
 # Our TODO application
 The main components of our application:
 
@@ -73,13 +73,22 @@ $ docker-compose up -d
 
 This should start a postgres server running at port `9876` (this may be changed by updating both `docker-compose.yml` and `.env`).
 
-The next step is to build and run the tests:
+Next we'll try to run the tests:
 
 ```
 $ cargo test
 ```
 
-All the tests, including the `src/` unit tests and the `tests/` integration tests should pass.
+The compiler complains about the `sqlx::query_as!` macro. Our build depends on the DB schema
+begin up to date. So we have to migrate the database:
+
+```
+$ cargo sqlx migrate run
+Applied 1/migrate init (7.51911ms)
+$ cargo test
+```
+
+All the tests, including the `src/` unit tests and the `tests/` integration tests should now pass.
 
 # Excercise 3: Run the application and interact with _GraphQL Playground_
 Now we're confident the application will work, we can run it:

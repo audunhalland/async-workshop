@@ -168,10 +168,10 @@ This is not _wildly_ different from the existing `todoItems` query that returns 
 Using the knowledge of where the different code modules live and what they do, we can assume we need changes
 to (at least) two different modules:
 
-* `src/schema/query.rs`, containing GraphQL queries. The "consumer-facing" side.
-* `src/repository.rs`, where database "stuff" actually happens.
+* `src/schema/query.rs`, containing GraphQL queries. The consumer-facing side.
+* `src/repository.rs`, where database stuff actually happens.
 
-We may "attack" this problem from either "end" first. You may prefer either one over the other. Being
+We may attack this problem from either end first. You may prefer either one over the other. Being
 good _TDD_ developers we'll implement the changes as two isolated tasks, with tests.
 
 ## Excercise 4.1: Create a new GraphQL query
@@ -235,7 +235,7 @@ To make the test pass, we need two API changes:
 GraphQL functions look somewhat special. They have two arguments
 that are not exposed through the schema: `&self` and `ctx`.
 
-`&self` is the "this" instance pointer to the `Query` struct. This struct
+`&self` is the instance pointer to the `Query` struct. This struct
 has no fields at all, so we can completely ignore it.
 `ctx` is information about the current `GraphQL` context. For example,
 we dig out the `Repository` instance using this context.
@@ -251,7 +251,7 @@ async fn todo_item_by_id(
 ```
 
 ### Change the return type
-Instead of `Vec`, Rust's growable array type, we'll use `Option`, the "nullability designator". Like so:
+Instead of `Vec` (Rust's growable array type), we'll use `Option`, the "nullability designator". Like so:
 
 ```rust
 async fn todo_item_by_id(
@@ -259,7 +259,7 @@ async fn todo_item_by_id(
 ) -> Result<Option<TodoItem>, AppError>
 ```
 
-What's `Result`? It's a _sum type_ (`enum`) representing something that has either
+What's `Result`? It's an `enum` (sum type / tagged union) representing something that has either
 succeeded or failed. It's first type parameter is the success type, the
 second one is the failure type. Using this we get completely type-safe error
 handling. Inspect the `AppError` type if you're curious about reason(s) this
@@ -273,8 +273,8 @@ We should get a compile error here:
 Ok(todo_items)
 ```
 
-`Ok` is the "success" variant of `Result`. But the _argument_ to `Ok` has the wrong type. We're expecting an `Option` but are providing a `Vec`.
-We have to "unpack" this vector so that an empty vector becomes a `None` value, and a non-empty vector becomes a `Some` value (`None` and `Some(T)` are the two variants of sum type `Option<T>`).
+`Ok` is the "success" variant of `Result`. But the _argument_ to `Ok` has the wrong type. It's expecting an `Option` but given a `Vec`.
+We have to "unpack" this vector so that an empty vector becomes a `None` value, and a non-empty vector becomes a `Some` value (`None` and `Some(T)` are the two variants of the enum `Option<T>`).
 
 We use the standard library for this conversion:
 ```rust
@@ -383,7 +383,7 @@ with all other details completely hidden.
 Normally, a `&some_vec` expression would _coerce_ (by ["Deref coercion"](https://doc.rust-lang.org/std/ops/trait.Deref.html#more-on-deref-coercion)) into a slice. But `&` only applies
 to the _outer_ type: `&filter.ids` just becomes a `&Option<Vec<Uuid>>`. Because we instead want
 the type `Option<&[Uuid]>`, that won't work. The standard library comes to the rescue again:
-By using [Option::as_deref()](https://doc.rust-lang.org/std/option/enum.Option.html#method.as_deref) (this method "maps" the mentioned deref coercion onto the type contained _inside_ the Option):
+By using [Option::as_deref()](https://doc.rust-lang.org/std/option/enum.Option.html#method.as_deref) (this method _maps_ the mentioned deref coercion onto the type contained _inside_ the Option):
 
 ```rust
     filter.ids.as_deref(),
@@ -437,10 +437,10 @@ async fn todo_item_by_id(&self, ctx: ...) { ... }
 
 There's a compile error, something about `ContextBase does not implement std::fmt::Debug`.
 
-It's true. Not every Rust value may be "printed". You may have seen `#[derive(Debug)]`
+It's true. Not every Rust value may be printed to the terminal. You may have seen `#[derive(Debug)]`
 before various `struct` definitions. This is how local types are provided with an implementation
-of the `Debug` `trait`, which means they become "printable". `ContextBase` is not a local
-type, it comes from the `async_graphql` library. It does _not_ implement `Debug`.
+of the [Debug trait](https://doc.rust-lang.org/std/fmt/trait.Debug.html), which means they become "printable". `ContextBase` is not a local
+type, it comes from the `async_graphql` library. It does not implement `Debug`.
 The easiest thing to do is to just skip types that we don't want tracing info for:
 
 ```rust
@@ -452,7 +452,7 @@ async fn todo_item_by_id(&self, ctx: ..., id: uuid::Uuid)
 `todo_item_by_id` should be printed in the terminal when the query runs, along with the value of the `id` parameter.
 
 The `Debug` trait is in fact a great way to protect sensitive information. Let's say
-we had a password (implemented using the [newtype pattern](https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html), or "tuple struct"):
+we had a password (implemented using the [newtype pattern](https://rust-unofficial.github.io/patterns/patterns/behavioural/newtype.html) / tuple struct):
 
 ```rust
 struct Password(pub String);
@@ -499,7 +499,7 @@ Write a statement that sends the object into the channel, and issue a `trace::er
 [`Result` documentation](https://doc.rust-lang.org/std/result/enum.Result.html)
 
 ## Data race safety and ownership
-Even if we write _asynchronous code_, it doesn't mean it's single threaded, like node.js is. `tokio`
+Even if we write _asynchronous code_, it doesn't mean it's single threaded, like e.g. node.js. `tokio`
 will spin up as many application threads as it sees fit. This means the the (ongoing) _subscription_ and _creation_
 futures may run on different threads.
 

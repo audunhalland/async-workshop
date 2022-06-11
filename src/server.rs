@@ -2,9 +2,10 @@ use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use async_graphql::Schema;
+use implementation::Impl;
 
+use crate::app::App;
 use crate::bus::EventBus;
-use crate::repository::Repository;
 use crate::schema::mutation::Mutation;
 use crate::schema::query::Query;
 use crate::schema::subscription::Subscription;
@@ -16,12 +17,13 @@ use crate::schema::AppSchema;
 /// The server runs as long as its future is polled by the executor.
 /// The server is a future that never completes.
 ///
-pub async fn serve(port: Option<u16>, pg_pool: sqlx::PgPool) {
+pub async fn serve(app: App, port: Option<u16>) {
     let port = port.unwrap_or(0);
-    let schema = Schema::build(Query, Mutation, Subscription)
-        .data(Repository::new(pg_pool))
-        .data(EventBus::new())
-        .finish();
+    let schema: Schema<Query<Impl<App>>, Mutation<Impl<App>>, Subscription> =
+        Schema::build(Query::default(), Mutation::default(), Subscription)
+            .data(EventBus::new())
+            .data(Impl::new(app))
+            .finish();
 
     async fn graphql_handler(
         schema: axum::Extension<AppSchema>,
@@ -30,7 +32,7 @@ pub async fn serve(port: Option<u16>, pg_pool: sqlx::PgPool) {
         schema.execute(req.into_inner()).await.into()
     }
 
-    let graphql_playground2 = move || async move {
+    let graphql_playground = move || async move {
         axum::response::Html(playground_source(
             GraphQLPlaygroundConfig::new("/graphql")
                 .subscription_endpoint(&format!("ws://localhost:{}", port)),
@@ -40,7 +42,7 @@ pub async fn serve(port: Option<u16>, pg_pool: sqlx::PgPool) {
     let app = axum::Router::new()
         .route(
             "/graphql",
-            axum::routing::get(graphql_playground2).post(graphql_handler),
+            axum::routing::get(graphql_playground).post(graphql_handler),
         )
         .layer(axum::extract::Extension(schema));
 

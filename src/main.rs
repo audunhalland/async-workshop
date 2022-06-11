@@ -19,5 +19,7 @@ async fn main() {
         .await
         .expect("Failed to migrate");
 
-    async_workshop::run(Some(8000), pg_pool).await;
+    let app = async_workshop::app::App { pg_pool };
+
+    async_workshop::run(app, Some(8000)).await;
 }

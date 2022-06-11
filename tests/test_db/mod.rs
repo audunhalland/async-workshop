@@ -5,6 +5,9 @@
 use dotenv::dotenv;
 use sqlx::Connection;
 
+use async_workshop::app::get_pg_pool;
+use unimock::MockFn;
+
 ///
 /// Create a "fresh" Postgres database for running tests with.
 ///
@@ -12,7 +15,10 @@ use sqlx::Connection;
 /// databases. A solution to this is to create one database per test thread,
 /// database name derived from the thread name.
 ///
-pub async fn create_test_db() -> sqlx::PgPool {
+/// Returns an unimock spy on the application, with `GetPgPool` implemented
+/// as getting a connection to the specific test database.
+///
+pub async fn create_test_db() -> unimock::Unimock {
     let db_name = format!("test_db_{}", std::thread::current().name().unwrap());
     let mut url = database_server_url();
     let mut connection = sqlx::PgConnection::connect(url.as_str()).await.unwrap();
@@ -38,7 +44,11 @@ pub async fn create_test_db() -> sqlx::PgPool {
         .await
         .expect("Failed to migrate");
 
-    pg_pool
+    unimock::spy(Some(
+        get_pg_pool::Fn::each_call(unimock::matching!())
+            .returns(pg_pool)
+            .in_any_order(),
+    ))
 }
 
 // Load DATABASE_URL, but strip away its path, i.e. /database_name

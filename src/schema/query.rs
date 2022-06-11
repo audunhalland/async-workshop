@@ -43,7 +43,7 @@ mod tests {
     #[tokio::test]
     async fn fetching_a_list_of_todo_items_should_work() {
         let response = test_execute(
-            unimock::mock(Some(
+            mock(Some(
                 database::list_todo_items::Fn::next_call(matching!(_))
                     .returns(Ok(vec![test_todo_item()]))
                     .once()

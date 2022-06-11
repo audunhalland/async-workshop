@@ -52,9 +52,10 @@ You can take a look around, the code modules are as follows:
 * [src/main.rs](src/main.rs) `fn main()`
 * [src/lib.rs](src/lib.rs) `fn run()` + root module defining all other lib modules:
 * [src/config.rs](src/config.rs) runtime config model needed to run the app
+* [src/app.rs](src/app.rs) data structure for the running app
 * [src/model.rs](src/model.rs) type definitions like `AppError` and `TodoFilter`
 * [src/server.rs](src/server.rs) web server/endpoints
-* [src/repository.rs](src/repository.rs) SQL queries
+* [src/database.rs](src/database.rs) SQL queries
 * [src/schema/](src/schema/) GraphQL schema definition and implementation
 * [src/schema/query.rs](src/schema/query.rs) GraphQL queries (immutable)
 * [src/schema/mutation.rs](src/schema/mutation.rs) GraphQL mutations (e.g. create a new TODO item)
@@ -187,14 +188,11 @@ async fn fetching_a_todo_item_by_id_should_work() {
 
 or something like that. Inside, create a mock of our repo:
 
-```rust
-let mock_repo = Repository::faux();
-// method mocks ignored for now ;)
-```
-
 Issue an invocation of a GraphQL query:
 ```rust
-let response = test_execute(mock_repo, "
+let response = test_execute(
+    mock(None),
+    "
     {
         todoItemById(id: \"notsureyet\") {
             description
@@ -236,7 +234,7 @@ GraphQL functions look somewhat special. They have two arguments
 that are not exposed through the schema: `&self` and `ctx`.
 
 `&self` is the instance pointer to the `Query` struct. This struct
-has no fields at all, so we can completely ignore it.
+has no fields at all (except a `PhantomData`), so we can completely ignore it.
 `ctx` is information about the current `GraphQL` context. For example,
 we dig out the `Repository` instance using this context.
 
@@ -292,29 +290,27 @@ semicolon, which indicates that this is an expression instead of a statement.
 `Uuid`. This should be proof that GraphQL recognizes our new query. To keep things
 simple, just change it to `"000000000000-0000-0000-00000000"`.
 
-### Dead simple mocking with [faux](https://docs.rs/faux/0.1.2/faux/)
-`cargo test` again. This time it should fail rather miserably, with a `panic`. It should indicate some missing mock. We're missing a `faux::when!` in our test, itself
-proof that our new method was entered. Just copy `faux::when` from the other test:
+### Dead simple mocking with [unimock](https://docs.rs/unimock/0.2.1/unimock/)
+`cargo test` again. This time it should fail rather miserably, with a `panic`. It should indicate some missing mock. We're missing a mock clause in our test, itself
+proof that our new method was entered. Just copy `mock(Some(..))` from the other test:
 
 ```rust
-faux::when!(
-    mock_repo.list_todo_items(_))
-        .then_return(Ok(vec![test_todo_item()])
-);
+mock(Some(
+    database::list_todo_items::Fn::next_call(matching!(_))
+        .returns(Ok(vec![test_todo_item()]))
+        .once()
+        .in_order(),
+)),
 ```
-
-If you defined `mock_repo` as `let mock_repo = ...` you'll get another compile error.
-All Rust variables are immutable by default, and registering a mock on something is
-the same as _mutating_ it. We have to use the `mut` keyword and change it to `let mut mock_repo = `.
 
 ```
 $ cargo test
 ```
 
-The tests should now run fine. But we forgot something. The mock has a _wildcard match_ (`_`) on the arguments passed to `Repository::list_todo_items`, and we do nothing with the `id` being passed to our function. `Repository` doesn't know anything about any `id`.
+The tests should now run fine. But we forgot something. The mock clause has a _wildcard match_ (`_`) on the arguments passed to `database::list_todo_items`, and we do nothing with the `id` being passed to our function. `database` doesn't know anything about any `id`.
 
 ## Excercise 4.2: Extending Repository/SQL
-Open `src/repository.rs`. For the sake of DRY we can extend `async fn list_todo_items` to be able to optionally _filter_ on UUIDs (you are welcome to disagree with this design decision by calling it _unclean_ or whatever. But for now let's move on). This function accepts a `TodoFilter` as its first argument.
+Open `src/database.rs`. For the sake of DRY we can extend `async fn list_todo_items` to be able to optionally _filter_ on UUIDs (you are welcome to disagree with this design decision by calling it _unclean_ or whatever. But for now let's move on). This function accepts a `TodoFilter` as its first argument.
 
 Open `src/model.rs`, where `TodoFilter` is defined:
 
@@ -392,7 +388,7 @@ By using [Option::as_deref()](https://doc.rust-lang.org/std/option/enum.Option.h
 ```
 
 ## Excercise 4.3 writing an integration test
-Let's hop into `tests/repository_test.rs` and test if that SQL trick actually works.
+Let's hop into `tests/database_test.rs` and test if that SQL trick actually works.
 
 Write a new test to prove that we are actually filtering by id.
 
@@ -400,9 +396,7 @@ At last, to finish all of exercise 4, make `todoItemById` _actually_ fetch a TOD
 
 ## Bonus challenge:
 In the `Query::todo_item_by_id` _unit test_, find some way to assert that
-the `id` argument actually gets passed correctly into Repository.
-
-[Docs for the faux mocking library](https://docs.rs/faux/0.1.2/faux/)
+the `id` argument actually gets passed correctly into `database`.
 
 # Excercise 5: Structured logging
 Rust has quite good support for flexible logging. When debugging a running service

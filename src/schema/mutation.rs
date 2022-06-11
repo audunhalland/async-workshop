@@ -1,4 +1,3 @@
-use crate::bus::EventBus;
 use crate::model::AppError;
 use crate::repository::Repository;
 

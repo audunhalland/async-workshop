@@ -471,9 +471,9 @@ dependencies = [
 
 [[package]]
 name = "entrait"
-version = "0.4.0-beta.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fb85f5b292e7a605c57b0db27d50625400028a39d6cbc13e4ffbf88e253e5c4"
+checksum = "c39fe38bb1a9ce12f7c9cbd67acd84a4ff1e1736dfc845363ac0f9b00f0192bd"
 dependencies = [
  "async-trait",
  "entrait_macros",
@@ -483,9 +483,9 @@ dependencies = [
 
 [[package]]
 name = "entrait_macros"
-version = "0.4.0-beta.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "264f0dd7ea54dbc93758fca6dc8047da017f80459db0680863ae65f66007ba65"
+checksum = "e21cdc9f9136db12949645713c3a5871cc9150e18453dcfa8b4c24523b390083"
 dependencies = [
  "proc-macro2",
  "quote",

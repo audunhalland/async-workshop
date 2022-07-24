@@ -1,4 +1,4 @@
-use entrait::unimock::entrait;
+use entrait::entrait_export as entrait;
 
 pub struct App {
     pub pg_pool: sqlx::PgPool,

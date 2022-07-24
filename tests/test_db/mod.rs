@@ -45,7 +45,8 @@ pub async fn create_test_db() -> unimock::Unimock {
         .expect("Failed to migrate");
 
     unimock::spy(Some(
-        get_pg_pool::Fn::each_call(unimock::matching!())
+        get_pg_pool::Fn
+            .each_call(unimock::matching!())
             .returns(pg_pool)
             .in_any_order(),
     ))

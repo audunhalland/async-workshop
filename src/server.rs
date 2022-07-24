@@ -2,7 +2,7 @@ use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use async_graphql::Schema;
-use implementation::Impl;
+use entrait::*;
 
 use crate::app::App;
 use crate::bus::EventBus;

@@ -17,7 +17,7 @@ pub mod schema {
 
     use crate::app::App;
 
-    use implementation::Impl;
+    use entrait::*;
 
     // Type alias for the complete TODO GraphQL schema
     pub type AppSchema = async_graphql::Schema<

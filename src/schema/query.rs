@@ -44,7 +44,8 @@ mod tests {
     async fn fetching_a_list_of_todo_items_should_work() {
         let response = test_execute(
             mock(Some(
-                database::list_todo_items::Fn::next_call(matching!(_))
+                database::list_todo_items::Fn
+                    .next_call(matching!(_))
                     .returns(Ok(vec![test_todo_item()]))
                     .once()
                     .in_order(),

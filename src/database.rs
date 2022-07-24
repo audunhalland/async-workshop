@@ -2,9 +2,9 @@ use crate::app::GetPgPool;
 use crate::model::{AppError, TodoFilter};
 use crate::schema::todo_item::TodoItem;
 
-use entrait::unimock::entrait;
+use entrait::entrait_export as entrait;
 
-#[entrait(pub ListTodoItems, async_trait = true)]
+#[entrait(pub ListTodoItems)]
 async fn list_todo_items(
     deps: &impl GetPgPool,
     filter: TodoFilter,
@@ -26,7 +26,7 @@ async fn list_todo_items(
     Ok(rows)
 }
 
-#[entrait(pub InsertTodoItem, async_trait = true)]
+#[entrait(pub InsertTodoItem)]
 async fn insert_todo_item(deps: &impl GetPgPool, description: &str) -> Result<TodoItem, AppError> {
     let row = sqlx::query_as!(
         TodoItem,
@@ -44,7 +44,7 @@ async fn insert_todo_item(deps: &impl GetPgPool, description: &str) -> Result<To
     Ok(row)
 }
 
-#[entrait(pub SetDone, async_trait = true)]
+#[entrait(pub SetDone)]
 async fn set_done(deps: &impl GetPgPool, id: uuid::Uuid) -> Result<bool, AppError> {
     let result = sqlx::query!(
         "

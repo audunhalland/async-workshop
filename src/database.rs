@@ -4,7 +4,7 @@ use crate::schema::todo_item::TodoItem;
 
 use entrait::entrait_export as entrait;
 
-#[entrait(pub ListTodoItems)]
+#[entrait(pub ListTodoItems, mock_api=ListTodoItemsMock)]
 async fn list_todo_items(
     deps: &impl GetPgPool,
     filter: TodoFilter,

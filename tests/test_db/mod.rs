@@ -2,10 +2,10 @@
 //! Code for managing test databases to be used in integration tests.
 //!
 
+use async_workshop::app::GetPgPoolMock;
 use dotenv::dotenv;
 use sqlx::Connection;
 
-use async_workshop::app::get_pg_pool;
 use unimock::MockFn;
 
 ///
@@ -44,12 +44,11 @@ pub async fn create_test_db() -> unimock::Unimock {
         .await
         .expect("Failed to migrate");
 
-    unimock::spy(Some(
-        get_pg_pool::Fn
+    unimock::Unimock::new_partial(
+        GetPgPoolMock
             .each_call(unimock::matching!())
             .returns(pg_pool)
-            .in_any_order(),
-    ))
+    )
 }
 
 // Load DATABASE_URL, but strip away its path, i.e. /database_name

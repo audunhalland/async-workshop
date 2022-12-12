@@ -19,8 +19,8 @@ thiserror = "1"
 tracing = "0.1"
 tracing-futures = "0.2"
 tracing-subscriber = "0.3"
-entrait = { version = "0.4", features = ["unimock", "use-async-trait"] }
-unimock = "0.3"
+entrait = { version = "0.5", features = ["unimock", "use-boxed-futures"] }
+unimock = "0.4"
 
 [dev-dependencies]
 dotenv = "0.15"

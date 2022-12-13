@@ -290,17 +290,16 @@ semicolon, which indicates that this is an expression instead of a statement.
 `Uuid`. This should be proof that GraphQL recognizes our new query. To keep things
 simple, just change it to `"000000000000-0000-0000-00000000"`.
 
-### Dead simple mocking with [unimock](https://docs.rs/unimock/0.2.1/unimock/)
+### Dead simple mocking with [unimock](https://docs.rs/unimock/latest/unimock/)
 `cargo test` again. This time it should fail rather miserably, with a `panic`. It should indicate some missing mock. We're missing a mock clause in our test, itself
-proof that our new method was entered. Just copy `mock(Some(..))` from the other test:
+proof that our new method was entered. Just copy `Unimock::new(..)` from the other test:
 
 ```rust
-mock(Some(
-    database::list_todo_items::Fn::next_call(matching!(_))
+Unimock::new(
+    database::ListTodoItemsMock
+        .next_call(matching!(_))
         .returns(Ok(vec![test_todo_item()]))
-        .once()
-        .in_order(),
-)),
+),
 ```
 
 ```
